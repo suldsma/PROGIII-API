@@ -24,6 +24,15 @@ Una vez que la aplicación esté corriendo, visita:
 
 
 **Grupo A - PROGIII**
+
+
+-Hugo Leonel García
+
+-José Benjamín Fibiger
+
+-Rita María Victoria Lobos
+
+-Susana Ledesma
 ---
 
 *Desarrollado como Trabajo Final Integrador (PRIMERA ENTREGA)- Programación III 2025*
