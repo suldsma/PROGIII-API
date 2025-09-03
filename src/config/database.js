@@ -14,10 +14,8 @@ const dbConfig = {
   reconnect: true
 };
 
-// Crear pool de conexiones
 const pool = mysql.createPool(dbConfig);
 
-// Función para probar la conexión
 const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
@@ -29,7 +27,6 @@ const testConnection = async () => {
   }
 };
 
-// Función helper para ejecutar queries
 const query = async (sql, params = []) => {
   try {
     const [rows] = await pool.execute(sql, params);
@@ -40,7 +37,6 @@ const query = async (sql, params = []) => {
   }
 };
 
-// Función helper para transacciones
 const transaction = async (callback) => {
   const connection = await pool.getConnection();
   try {

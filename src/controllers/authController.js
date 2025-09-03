@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { query } = require('../config/database');
 const { createError } = require('../middlewares/errorHandler');
@@ -97,9 +96,7 @@ class AuthController {
 
       const usuario = usuarios[0];
 
-      // Verificar contraseña
-      // Nota: Las contraseñas en la BD parecen estar hasheadas con MD5
-      // En un entorno real, deberías usar bcrypt
+      // Verificar contraseña usando MD5 
       const contrasenaHash = crypto.createHash('md5').update(contrasenia).digest('hex');
       
       if (contrasenaHash !== usuario.contrasenia) {

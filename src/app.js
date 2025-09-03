@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 
+const { initializeApp } = require('./config/init');
 const swaggerSetup = require('./config/swagger');
 const { errorHandler } = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/auth');
@@ -11,17 +12,31 @@ const serviciosRoutes = require('./routes/servicios');
 
 const app = express();
 
-// Middlewares de seguridad y utilidad
-app.use(helmet());
-app.use(cors());
-app.use(morgan('combined'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// Configuración de middlewares de seguridad y utilidad
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
 
-// Documentación Swagger
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? false : '*',
+  credentials: true
+}));
+
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Configuración de Swagger
 swaggerSetup(app);
 
-// Rutas
+// Rutas de la API
 app.use('/api/auth', authRoutes);
 app.use('/api/servicios', serviciosRoutes);
 
@@ -30,7 +45,9 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     message: 'PROGIII API está funcionando correctamente',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    version: process.env.APP_VERSION || '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -38,18 +55,52 @@ app.get('/api/health', (req, res) => {
 app.use('*', (req, res) => {
   res.status(404).json({
     status: 'error',
-    message: 'Endpoint no encontrado'
+    message: `Endpoint ${req.method} ${req.originalUrl} no encontrado`,
+    availableEndpoints: [
+      'GET /api/health',
+      'POST /api/auth/login',
+      'GET /api/auth/me',
+      'POST /api/auth/refresh',
+      'GET /api/servicios',
+      'POST /api/servicios',
+      'GET /api/servicios/:id',
+      'PUT /api/servicios/:id',
+      'DELETE /api/servicios/:id',
+      'PATCH /api/servicios/:id/restore'
+    ]
   });
 });
 
-// Middleware de manejo de errores
+// Middleware de manejo de errores (debe ir al final)
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
+// Función para iniciar el servidor
+const startServer = async () => {
+  try {
+    // Inicializar la aplicación (conexión a BD, etc.)
+    await initializeApp();
+    
+    const PORT = process.env.PORT || 3000;
+    
+    app.listen(PORT, () => {
+      console.log('🚀 =======================================');
+      console.log(`🚀 Servidor PROGIII API iniciado`);
+      console.log(`🚀 Puerto: ${PORT}`);
+      console.log(`🚀 Entorno: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`📚 Documentación: http://localhost:${PORT}/api-docs`);
+      console.log(`🔗 Health Check: http://localhost:${PORT}/api/health`);
+      console.log('🚀 =======================================');
+    });
+    
+  } catch (error) {
+    console.error('❌ Error al iniciar el servidor:', error.message);
+    process.exit(1);
+  }
+};
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`📚 Documentación disponible en http://localhost:${PORT}/api-docs`);
-});
+// Iniciar servidor solo si este archivo se ejecuta directamente
+if (require.main === module) {
+  startServer();
+}
 
 module.exports = app;
