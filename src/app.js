@@ -5,7 +5,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const { initializeApp } = require('./config/init');
-const swaggerSetup = require('./config/swagger');
+const SwaggerConfig = require('./config/swagger');
 const { errorHandler } = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/auth');
 const serviciosRoutes = require('./routes/servicios');
@@ -33,8 +33,9 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Configuración de Swagger
-swaggerSetup(app);
+// Configuración de Swagger usando clase
+const swagger = new SwaggerConfig(app);
+swagger.init();
 
 // Rutas de la API
 app.use('/api/auth', authRoutes);
@@ -77,7 +78,6 @@ app.use(errorHandler);
 // Función para iniciar el servidor
 const startServer = async () => {
   try {
-    // Inicializar la aplicación (conexión a BD, etc.)
     await initializeApp();
     
     const PORT = process.env.PORT || 3000;
