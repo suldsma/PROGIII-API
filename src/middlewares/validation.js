@@ -100,6 +100,15 @@ const validatePagination = [
     .toBoolean()
 ];
 
+// NUEVA VALIDACIÓN AGREGADA - Para estadísticas
+const validateStatsQuery = [
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 20 })
+    .withMessage('El límite debe ser un número entre 1 y 20')
+    .toInt()
+];
+
 // Validaciones para login
 const validateLogin = [
   body('nombre_usuario')
@@ -120,6 +129,50 @@ const validateLogin = [
     .withMessage('La contraseña no puede exceder 50 caracteres')
 ];
 
+// Validación para actualización parcial de servicio
+const validatePartialUpdate = [
+  param('id')
+    .isInt({ min: 1 })
+    .withMessage('El ID debe ser un número entero positivo')
+    .toInt(),
+  
+  body('descripcion')
+    .optional()
+    .notEmpty()
+    .withMessage('La descripción no puede estar vacía')
+    .isLength({ min: 3, max: 255 })
+    .withMessage('La descripción debe tener entre 3 y 255 caracteres')
+    .trim()
+    .customSanitizer((value) => {
+      return value ? value.replace(/\s+/g, ' ').trim() : value;
+    }),
+  
+  body('importe')
+    .optional()
+    .notEmpty()
+    .withMessage('El importe no puede estar vacío')
+    .isDecimal({ decimal_digits: '0,2' })
+    .withMessage('El importe debe ser un número decimal válido con hasta 2 decimales')
+    .custom(value => {
+      if (value !== undefined && value !== null && value !== '') {
+        const num = parseFloat(value);
+        if (num < 0) {
+          throw new Error('El importe no puede ser negativo');
+        }
+        if (num > 9999999.99) {
+          throw new Error('El importe no puede superar $9,999,999.99');
+        }
+      }
+      return true;
+    }),
+  
+  body('activo')
+    .optional()
+    .isBoolean()
+    .withMessage('El campo activo debe ser true o false')
+    .toBoolean()
+];
+
 // Validaciones comunes
 const validateId = [
   param('id')
@@ -136,12 +189,52 @@ const validateOptionalBoolean = (field) => [
     .toBoolean()
 ];
 
+// Validación para campos de búsqueda avanzada
+const validateAdvancedSearch = [
+  query('sortBy')
+    .optional()
+    .isIn(['descripcion', 'importe', 'creado', 'modificado'])
+    .withMessage('El campo de ordenamiento debe ser uno de: descripcion, importe, creado, modificado'),
+  
+  query('sortOrder')
+    .optional()
+    .isIn(['ASC', 'DESC'])
+    .withMessage('El orden debe ser ASC o DESC'),
+  
+  query('minImporte')
+    .optional()
+    .isDecimal({ decimal_digits: '0,2' })
+    .withMessage('El importe mínimo debe ser un número decimal válido')
+    .custom(value => {
+      const num = parseFloat(value);
+      if (num < 0) {
+        throw new Error('El importe mínimo no puede ser negativo');
+      }
+      return true;
+    }),
+  
+  query('maxImporte')
+    .optional()
+    .isDecimal({ decimal_digits: '0,2' })
+    .withMessage('El importe máximo debe ser un número decimal válido')
+    .custom(value => {
+      const num = parseFloat(value);
+      if (num < 0) {
+        throw new Error('El importe máximo no puede ser negativo');
+      }
+      return true;
+    })
+];
+
 module.exports = {
   validateServicioCreate,
   validateServicioUpdate,
   validateServicioId,
   validatePagination,
+  validateStatsQuery, // NUEVA EXPORTACIÓN
   validateLogin,
   validateId,
-  validateOptionalBoolean
+  validateOptionalBoolean,
+  validatePartialUpdate, // NUEVA EXPORTACIÓN
+  validateAdvancedSearch // NUEVA EXPORTACIÓN
 };

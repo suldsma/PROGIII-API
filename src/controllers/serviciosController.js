@@ -28,18 +28,23 @@ class ServiciosController {
         }
     }
 
-    // --- ¡NUEVO MÉTODO AGREGADO! ---
-    // Método getMostUsed
+    // Método getMostUsed - CORREGIDO Y COMPLETADO
     static async getMostUsed(req, res, next) {
         try {
-            // Lógica para obtener los servicios más utilizados
-            // Por ejemplo, podrías consultar un modelo de reservas:
-            // const serviciosMasUsados = await Servicio.findMostUsedInReservas();
+            const { limit = 5 } = req.query;
+            
+            // Validar que el límite sea un número válido
+            const parsedLimit = parseInt(limit);
+            if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 20) {
+                throw createError('El límite debe ser un número entre 1 y 20', 400);
+            }
+            
+            const serviciosMasUsados = await Servicio.getMostUsed(parsedLimit);
             
             res.status(200).json({
                 status: 'success',
-                message: 'Estadísticas de servicios más utilizados',
-                data: [] // Aquí irían los datos reales de los servicios
+                message: 'Servicios más utilizados obtenidos exitosamente',
+                data: serviciosMasUsados
             });
         } catch (error) {
             next(error);
@@ -201,7 +206,11 @@ class ServiciosController {
                 data: servicioActualizado
             });
         } catch (error) {
-            next(error);
+            if (error.message.includes('Ya existe un servicio')) {
+                next(createError(error.message, 409));
+            } else {
+                next(error);
+            }
         }
     }
 }

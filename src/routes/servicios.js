@@ -8,11 +8,67 @@ const {
   validateServicioCreate,
   validateServicioUpdate,
   validateServicioId,
-  validatePagination
+  validatePagination,
+  validateStatsQuery
 } = require('../middlewares/validation');
 
 // Middleware de autenticación para todas las rutas de servicios
 router.use(verifyToken);
+
+/**
+ * @swagger
+ * /api/servicios/stats/most-used:
+ *   get:
+ *     summary: Obtener servicios más utilizados
+ *     description: Retorna estadísticas de los servicios más utilizados en reservas activas
+ *     tags: [Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 20
+ *           default: 5
+ *         description: Cantidad máxima de servicios a retornar
+ *     responses:
+ *       200:
+ *         description: Estadísticas obtenidas exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Servicios más utilizados obtenidos exitosamente
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Servicio'
+ *                       - type: object
+ *                         properties:
+ *                           uso_count:
+ *                             type: integer
+ *                             description: Cantidad de veces usado en reservas
+ *                             example: 15
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+// IMPORTANTE: Rutas específicas PRIMERO antes que las parametrizadas
+router.get('/stats/most-used',
+  validateStatsQuery,
+  handleValidationErrors,
+  ServiciosController.getMostUsed
+);
 
 /**
  * @swagger
@@ -23,27 +79,60 @@ router.use(verifyToken);
  *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Cantidad de elementos por página
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *           maxLength: 100
+ *         description: Término de búsqueda en la descripción
+ *       - in: query
+ *         name: includeInactive
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Incluir servicios inactivos (solo administradores)
+ *     responses:
+ *       200:
+ *         description: Lista de servicios obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Servicio'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
  */
-// GET /api/servicios - Listar servicios (BROWSE) - Todos los roles autenticados
 router.get('/',
   validatePagination,
   handleValidationErrors,
   ServiciosController.getAll
-);
-
-/**
- * @swagger
- * /api/servicios/stats/most-used:
- *   get:
- *     summary: Obtener servicios más utilizados
- *     description: Obtiene estadísticas de los servicios más utilizados en reservas activas.
- *     tags: [Servicios]
- *     security:
- *       - bearerAuth: []
- */
-// GET /api/servicios/stats/most-used - Estadísticas de servicios más usados
-router.get('/stats/most-used',
-  ServiciosController.getMostUsed
 );
 
 /**
@@ -55,8 +144,32 @@ router.get('/stats/most-used',
  *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: ID del servicio
+ *     responses:
+ *       200:
+ *         description: Servicio obtenido exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/Servicio'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  */
-// GET /api/servicios/:id - Obtener servicio por ID (READ) - Todos los roles autenticados
 router.get('/:id',
   validateServicioId,
   handleValidationErrors,
@@ -72,8 +185,32 @@ router.get('/:id',
  *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ServicioInput'
+ *     responses:
+ *       201:
+ *         description: Servicio creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       409:
+ *         description: Conflicto - Servicio ya existe
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-// POST /api/servicios - Crear servicio (ADD) - Solo administradores y empleados
 router.post('/',
   requireRole([ROLES.ADMINISTRADOR, ROLES.EMPLEADO]),
   validateServicioCreate,
@@ -90,8 +227,38 @@ router.post('/',
  *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: ID del servicio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ServicioInput'
+ *     responses:
+ *       200:
+ *         description: Servicio actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       409:
+ *         description: Conflicto - Ya existe servicio con esa descripción
  */
-// PUT /api/servicios/:id - Actualizar servicio completo (EDIT) - Solo administradores y empleados
 router.put('/:id',
   requireRole([ROLES.ADMINISTRADOR, ROLES.EMPLEADO]),
   validateServicioUpdate,
@@ -108,8 +275,51 @@ router.put('/:id',
  *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: ID del servicio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               descripcion:
+ *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 255
+ *                 example: "Servicio de sonido actualizado"
+ *               importe:
+ *                 type: number
+ *                 format: decimal
+ *                 minimum: 0
+ *                 maximum: 9999999.99
+ *                 example: 18000.00
+ *               activo:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Servicio actualizado parcialmente exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
  */
-// PATCH /api/servicios/:id - Actualización parcial - Solo administradores y empleados
 router.patch('/:id',
   requireRole([ROLES.ADMINISTRADOR, ROLES.EMPLEADO]),
   validateServicioId,
@@ -126,8 +336,37 @@ router.patch('/:id',
  *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: ID del servicio
+ *     responses:
+ *       200:
+ *         description: Servicio eliminado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Servicio eliminado exitosamente
+ *       400:
+ *         description: Error al eliminar - Servicio en uso o ya eliminado
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
  */
-// DELETE /api/servicios/:id - Eliminar servicio (DELETE) - Solo administradores y empleados
 router.delete('/:id',
   requireRole([ROLES.ADMINISTRADOR, ROLES.EMPLEADO]),
   validateServicioId,
@@ -144,8 +383,30 @@ router.delete('/:id',
  *     tags: [Servicios]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: ID del servicio
+ *     responses:
+ *       200:
+ *         description: Servicio restaurado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         description: El servicio ya está activo
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
  */
-// PATCH /api/servicios/:id/restore - Restaurar servicio - Solo administradores
 router.patch('/:id/restore',
   requireRole([ROLES.ADMINISTRADOR]),
   validateServicioId,

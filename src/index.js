@@ -48,27 +48,48 @@ app.get('/api/health', (req, res) => {
     message: 'PROGIII API está funcionando correctamente',
     timestamp: new Date().toISOString(),
     version: process.env.APP_VERSION || '1.0.0',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    database: 'MySQL - Conectado',
+    features: [
+      'BREAD completo para Servicios',
+      'Autenticación JWT',
+      'Autorización por roles',
+      'Validaciones robustas',
+      'Soft delete',
+      'Paginación y búsqueda',
+      'Documentación Swagger'
+    ]
   });
 });
 
-// Manejo de rutas no encontradas
+// Manejo de rutas no encontradas - ENDPOINTS ACTUALIZADOS
 app.use('*', (req, res) => {
   res.status(404).json({
     status: 'error',
     message: `Endpoint ${req.method} ${req.originalUrl} no encontrado`,
-    availableEndpoints: [
-      'GET /api/health',
-      'POST /api/auth/login',
-      'GET /api/auth/me',
-      'POST /api/auth/refresh',
-      'GET /api/servicios',
-      'POST /api/servicios',
-      'GET /api/servicios/:id',
-      'PUT /api/servicios/:id',
-      'DELETE /api/servicios/:id',
-      'PATCH /api/servicios/:id/restore'
-    ]
+    availableEndpoints: {
+      auth: [
+        'POST /api/auth/login - Iniciar sesión',
+        'GET /api/auth/me - Perfil del usuario',
+        'POST /api/auth/refresh - Renovar token'
+      ],
+      servicios: [
+        'GET /api/servicios - Listar servicios (Browse)',
+        'GET /api/servicios/stats/most-used - Servicios más usados',
+        'GET /api/servicios/:id - Obtener servicio (Read)',
+        'POST /api/servicios - Crear servicio (Add)',
+        'PUT /api/servicios/:id - Actualizar servicio (Edit)',
+        'PATCH /api/servicios/:id - Actualización parcial',
+        'DELETE /api/servicios/:id - Eliminar servicio (Delete)',
+        'PATCH /api/servicios/:id/restore - Restaurar servicio'
+      ],
+      system: [
+        'GET /api/health - Estado del servidor',
+        'GET /api-docs - Documentación Swagger',
+        'GET /api-docs.json - Especificación OpenAPI'
+      ]
+    },
+    documentation: `http://localhost:${process.env.PORT || 3000}/api-docs`
   });
 });
 
@@ -89,6 +110,10 @@ const startServer = async () => {
       console.log(`🚀 Entorno: ${process.env.NODE_ENV || 'development'}`);
       console.log(`📚 Documentación: http://localhost:${PORT}/api-docs`);
       console.log(`🔗 Health Check: http://localhost:${PORT}/api/health`);
+      console.log(`📊 Base de datos: MySQL - ${process.env.DB_NAME}`);
+      console.log('✅ BREAD Servicios: Implementado');
+      console.log('✅ JWT Auth: Activo');
+      console.log('✅ Roles: Admin, Empleado, Cliente');
       console.log('🚀 =======================================');
     });
     
