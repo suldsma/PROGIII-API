@@ -13,7 +13,7 @@ router.post('/login',
   AuthController.login
 );
 
-// GET /api/auth/me - Obtener perfil del usuario actual (requiere autenticación)
+// GET /api/auth/me - Obtiene perfil del usuario actual (requiere autenticación)
 router.get('/me',
   verifyToken,
   AuthController.getProfile

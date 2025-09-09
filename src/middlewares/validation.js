@@ -9,7 +9,7 @@ const validateServicioCreate = [
     .withMessage('La descripción debe tener entre 3 y 255 caracteres')
     .trim()
     .customSanitizer((value) => {
-      // Limpiar espacios múltiples y capitalizar primera letra
+      // Limpia espacios múltiples y capitaliza primera letra
       return value.replace(/\s+/g, ' ').trim();
     }),
   
@@ -231,10 +231,10 @@ module.exports = {
   validateServicioUpdate,
   validateServicioId,
   validatePagination,
-  validateStatsQuery, // NUEVA EXPORTACIÓN
+  validateStatsQuery,
   validateLogin,
   validateId,
   validateOptionalBoolean,
-  validatePartialUpdate, // NUEVA EXPORTACIÓN
-  validateAdvancedSearch // NUEVA EXPORTACIÓN
+  validatePartialUpdate, 
+  validateAdvancedSearch 
 };

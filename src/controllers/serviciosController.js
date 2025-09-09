@@ -28,12 +28,12 @@ class ServiciosController {
         }
     }
 
-    // Método getMostUsed - CORREGIDO Y COMPLETADO
+    // Método getMostUsed 
     static async getMostUsed(req, res, next) {
         try {
             const { limit = 5 } = req.query;
             
-            // Validar que el límite sea un número válido
+            //  que el límite sea un número válido
             const parsedLimit = parseInt(limit);
             if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 20) {
                 throw createError('El límite debe ser un número entre 1 y 20', 400);

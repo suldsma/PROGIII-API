@@ -138,7 +138,7 @@ class Servicio {
     const { descripcion, importe } = data;
     
     try {
-      // Verificar que no existe un servicio con la misma descripción
+      // Verifica que no existe un servicio con la misma descripción
       const exists = await Servicio.existsByDescripcion(descripcion);
       if (exists) {
         throw new Error('Ya existe un servicio con esta descripción');
@@ -160,7 +160,7 @@ class Servicio {
   }
 
   /**
-   * Actualizar servicio
+   * Actualiza servicio
    */
   async update(data) {
     const { descripcion, importe } = data;
@@ -171,7 +171,7 @@ class Servicio {
       if (descripcion !== undefined && descripcion !== null) {
         const trimmedDesc = descripcion.trim();
         if (trimmedDesc !== this.descripcion) {
-          // Verificar que no existe otro servicio con la misma descripción
+          // Verifica que no existe otro servicio con la misma descripción
           const exists = await Servicio.existsByDescripcion(trimmedDesc, this.servicio_id);
           if (exists) {
             throw new Error('Ya existe un servicio con esta descripción');
@@ -214,7 +214,7 @@ class Servicio {
    */
   async softDelete() {
     try {
-      // Verificar si el servicio está siendo usado en reservas activas
+      // Verifica si el servicio está siendo usado en reservas activas
       const reservasActivas = await query(
         `SELECT COUNT(*) as count 
          FROM reservas_servicios rs 
@@ -244,7 +244,7 @@ class Servicio {
   }
 
   /**
-   * Restaurar servicio eliminado
+   * Restaura servicio eliminado
    */
   async restore() {
     try {
@@ -261,14 +261,14 @@ class Servicio {
   }
 
   /**
-   * Verificar si el servicio está activo
+   * Verifica si el servicio está activo
    */
   isActive() {
     return Boolean(this.activo);
   }
 
   /**
-   * Obtener servicios más utilizados
+   * Obtiene servicios más utilizados
    */
   static async getMostUsed(limit = 5) {
     try {

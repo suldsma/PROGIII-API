@@ -93,7 +93,7 @@ app.use('*', (req, res) => {
   });
 });
 
-// Middleware de manejo de errores (debe ir al final)
+// Middleware de manejo de errores 
 app.use(errorHandler);
 
 // Función para iniciar el servidor
@@ -123,7 +123,7 @@ const startServer = async () => {
   }
 };
 
-// Iniciar servidor solo si este archivo se ejecuta directamente
+// Inicia servidor solo si este archivo se ejecuta directamente
 if (require.main === module) {
   startServer();
 }

@@ -82,7 +82,7 @@ class AuthController {
     try {
       const { nombre_usuario, contrasenia } = req.body;
 
-      // Buscar usuario por nombre_usuario (email)
+      // Busca usuario por nombre_usuario (email)
       const usuarios = await query(
         `SELECT usuario_id, nombre, apellido, nombre_usuario, contrasenia, tipo_usuario, activo 
          FROM usuarios 
@@ -96,14 +96,14 @@ class AuthController {
 
       const usuario = usuarios[0];
 
-      // Verificar contraseña usando MD5 
+      // Verifica contraseña usando MD5 
       const contrasenaHash = crypto.createHash('md5').update(contrasenia).digest('hex');
       
       if (contrasenaHash !== usuario.contrasenia) {
         throw createError('Credenciales inválidas', 401);
       }
 
-      // Generar JWT token
+      // Genera JWT token
       const tokenPayload = {
         userId: usuario.usuario_id,
         email: usuario.nombre_usuario,
@@ -119,7 +119,7 @@ class AuthController {
         }
       );
 
-      // Preparar datos del usuario para la respuesta (sin contraseña)
+      // Prepara datos del usuario para la respuesta (sin contraseña)
       const userData = {
         id: usuario.usuario_id,
         nombre: usuario.nombre,
@@ -266,7 +266,7 @@ class AuthController {
     try {
       const userId = req.user.id;
 
-      // Verificar que el usuario aún existe y está activo
+      // Verifica que el usuario aún existe y está activo
       const usuarios = await query(
         'SELECT usuario_id, nombre_usuario, tipo_usuario FROM usuarios WHERE usuario_id = ? AND activo = 1',
         [userId]
@@ -278,7 +278,7 @@ class AuthController {
 
       const usuario = usuarios[0];
 
-      // Generar nuevo token
+      // Genera nuevo token
       const tokenPayload = {
         userId: usuario.usuario_id,
         email: usuario.nombre_usuario,

@@ -256,7 +256,6 @@ const logCriticalError = (error, context = {}) => {
   });
   console.error('====================');
   
-  // Aquí podrías integrar con servicios de logging como Winston, Sentry, etc.
 };
 
 module.exports = {
