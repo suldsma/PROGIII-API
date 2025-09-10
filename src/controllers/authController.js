@@ -1,7 +1,7 @@
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const { query } = require('../config/database');
-const { createError } = require('../middlewares/errorHandler');
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { query } from '../config/database.js';
+import { createError } from '../middlewares/errorHandler.js';
 
 /**
  * @swagger
@@ -88,115 +88,6 @@ class AuthController {
          FROM usuarios 
          WHERE nombre_usuario = ? AND activo = 1`,
         [nombre_usuario.toLowerCase()]
-      );
-
-      if (usuarios.length === 0) {
-        throw createError('Credenciales inválidas', 401);
-      }
-
-      const usuario = usuarios[0];
-
-      // Verifica contraseña usando MD5 
-      const contrasenaHash = crypto.createHash('md5').update(contrasenia).digest('hex');
-      
-      if (contrasenaHash !== usuario.contrasenia) {
-        throw createError('Credenciales inválidas', 401);
-      }
-
-      // Genera JWT token
-      const tokenPayload = {
-        userId: usuario.usuario_id,
-        email: usuario.nombre_usuario,
-        tipo: usuario.tipo_usuario
-      };
-
-      const token = jwt.sign(
-        tokenPayload,
-        process.env.JWT_SECRET,
-        { 
-          expiresIn: process.env.JWT_EXPIRES_IN || '24h',
-          issuer: 'progiii-api'
-        }
-      );
-
-      // Prepara datos del usuario para la respuesta (sin contraseña)
-      const userData = {
-        id: usuario.usuario_id,
-        nombre: usuario.nombre,
-        apellido: usuario.apellido,
-        nombre_usuario: usuario.nombre_usuario,
-        tipo_usuario: usuario.tipo_usuario,
-        tipo_usuario_texto: AuthController.getTipoUsuarioTexto(usuario.tipo_usuario)
-      };
-
-      res.status(200).json({
-        status: 'success',
-        message: 'Login exitoso',
-        data: {
-          token,
-          user: userData
-        }
-      });
-
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  /**
-   * @swagger
-   * /api/auth/me:
-   *   get:
-   *     summary: Obtener información del usuario actual
-   *     tags: [Autenticación]
-   *     security:
-   *       - bearerAuth: []
-   *     responses:
-   *       200:
-   *         description: Información del usuario obtenida exitosamente
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 status:
-   *                   type: string
-   *                   example: success
-   *                 data:
-   *                   type: object
-   *                   properties:
-   *                     id:
-   *                       type: integer
-   *                     nombre:
-   *                       type: string
-   *                     apellido:
-   *                       type: string
-   *                     nombre_usuario:
-   *                       type: string
-   *                     tipo_usuario:
-   *                       type: integer
-   *                     tipo_usuario_texto:
-   *                       type: string
-   *                     celular:
-   *                       type: string
-   *                     foto:
-   *                       type: string
-   *       401:
-   *         description: Token inválido o expirado
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Error'
-   */
-  static async getProfile(req, res, next) {
-    try {
-      const userId = req.user.id;
-
-      const usuarios = await query(
-        `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto, creado
-         FROM usuarios 
-         WHERE usuario_id = ? AND activo = 1`,
-        [userId]
       );
 
       if (usuarios.length === 0) {
@@ -318,4 +209,113 @@ class AuthController {
   }
 }
 
-module.exports = AuthController;
+export default AuthController;Credenciales inválidas', 401);
+      }
+
+      const usuario = usuarios[0];
+
+      // Verifica contraseña usando MD5 
+      const contrasenaHash = crypto.createHash('md5').update(contrasenia).digest('hex');
+      
+      if (contrasenaHash !== usuario.contrasenia) {
+        throw createError('Credenciales inválidas', 401);
+      }
+
+      // Genera JWT token
+      const tokenPayload = {
+        userId: usuario.usuario_id,
+        email: usuario.nombre_usuario,
+        tipo: usuario.tipo_usuario
+      };
+
+      const token = jwt.sign(
+        tokenPayload,
+        process.env.JWT_SECRET,
+        { 
+          expiresIn: process.env.JWT_EXPIRES_IN || '24h',
+          issuer: 'progiii-api'
+        }
+      );
+
+      // Prepara datos del usuario para la respuesta (sin contraseña)
+      const userData = {
+        id: usuario.usuario_id,
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
+        nombre_usuario: usuario.nombre_usuario,
+        tipo_usuario: usuario.tipo_usuario,
+        tipo_usuario_texto: AuthController.getTipoUsuarioTexto(usuario.tipo_usuario)
+      };
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Login exitoso',
+        data: {
+          token,
+          user: userData
+        }
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @swagger
+   * /api/auth/me:
+   *   get:
+   *     summary: Obtener información del usuario actual
+   *     tags: [Autenticación]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Información del usuario obtenida exitosamente
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status:
+   *                   type: string
+   *                   example: success
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     id:
+   *                       type: integer
+   *                     nombre:
+   *                       type: string
+   *                     apellido:
+   *                       type: string
+   *                     nombre_usuario:
+   *                       type: string
+   *                     tipo_usuario:
+   *                       type: integer
+   *                     tipo_usuario_texto:
+   *                       type: string
+   *                     celular:
+   *                       type: string
+   *                     foto:
+   *                       type: string
+   *       401:
+   *         description: Token inválido o expirado
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  static async getProfile(req, res, next) {
+    try {
+      const userId = req.user.id;
+
+      const usuarios = await query(
+        `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto, creado
+         FROM usuarios 
+         WHERE usuario_id = ? AND activo = 1`,
+        [userId]
+      );
+
+      if (usuarios.length === 0) {
+        throw createError('

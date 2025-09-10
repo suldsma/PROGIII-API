@@ -1,4 +1,4 @@
-const { validationResult } = require('express-validator');
+import { validationResult } from 'express-validator';
 
 /**
  * Middleware para manejar errores de validación de express-validator
@@ -258,7 +258,7 @@ const logCriticalError = (error, context = {}) => {
   
 };
 
-module.exports = {
+export {
   errorHandler,
   handleValidationErrors,
   notFoundHandler,

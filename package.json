@@ -1,16 +1,13 @@
 {
-  "name": "progiii-api",
+  "name": "app-reservas",
   "version": "1.0.0",
   "description": "API REST para gestión de reservas de salones de cumpleaños - BREAD completo de Servicios",
-  "main": "src/app.js",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "api",
@@ -25,11 +22,8 @@
     "mysql",
     "jwt"
   ],
-  "author": {
-    "name": "Grupo A - PROGIII",
-    "email": "grupoa@progiii.com"
-  },
-  "license": "MIT",
+  "author": "Grupo A - PROGIII",
+  "license": "ISC",
   "engines": {
     "node": ">=14.0.0",
     "npm": ">=6.0.0"
@@ -38,7 +32,7 @@
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
-    "express": "^4.18.2",
+    "express": "^5.1.0",
     "express-validator": "^7.0.1",
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.2",

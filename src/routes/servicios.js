@@ -1,16 +1,16 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const ServiciosController = require('../controllers/serviciosController');
-const { verifyToken, requireRole, ROLES } = require('../middlewares/auth');
-const { handleValidationErrors } = require('../middlewares/errorHandler');
-const {
+import ServiciosController from '../controllers/serviciosController.js';
+import { verifyToken, requireRole, ROLES } from '../middlewares/auth.js';
+import { handleValidationErrors } from '../middlewares/errorHandler.js';
+import {
   validateServicioCreate,
   validateServicioUpdate,
   validateServicioId,
   validatePagination,
   validateStatsQuery
-} = require('../middlewares/validation');
+} from '../middlewares/validation.js';
 
 // Middleware de autenticación para todas las rutas de servicios
 router.use(verifyToken);
@@ -414,4 +414,4 @@ router.patch('/:id/restore',
   ServiciosController.restore
 );
 
-module.exports = router;
+export default router;

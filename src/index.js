@@ -1,14 +1,18 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
 
-const { initializeApp } = require('./config/init');
-const SwaggerConfig = require('./config/swagger');
-const { errorHandler } = require('./middlewares/errorHandler');
-const authRoutes = require('./routes/auth');
-const serviciosRoutes = require('./routes/servicios');
+// Cargar variables de entorno
+dotenv.config();
+
+// Importaciones locales
+import { initializeApp } from './src/config/init.js';
+import SwaggerConfig from './src/config/swagger.js';
+import { errorHandler } from './src/middlewares/errorHandler.js';
+import authRoutes from './src/routes/auth.js';
+import serviciosRoutes from './src/routes/servicios.js';
 
 const app = express();
 
@@ -62,7 +66,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Manejo de rutas no encontradas - ENDPOINTS ACTUALIZADOS
+// Manejo de rutas no encontradas 
 app.use('*', (req, res) => {
   res.status(404).json({
     status: 'error',
@@ -123,9 +127,7 @@ const startServer = async () => {
   }
 };
 
-// Inicia servidor solo si este archivo se ejecuta directamente
-if (require.main === module) {
-  startServer();
-}
+// Inicia servidor
+startServer();
 
-module.exports = app;
+export default app;

@@ -1,4 +1,4 @@
-const { body, param, query } = require('express-validator');
+import { body, param, query } from 'express-validator';
 
 // Validaciones para servicios
 const validateServicioCreate = [
@@ -226,7 +226,7 @@ const validateAdvancedSearch = [
     })
 ];
 
-module.exports = {
+export {
   validateServicioCreate,
   validateServicioUpdate,
   validateServicioId,
@@ -235,6 +235,6 @@ module.exports = {
   validateLogin,
   validateId,
   validateOptionalBoolean,
-  validatePartialUpdate, 
-  validateAdvancedSearch 
+  validatePartialUpdate,
+  validateAdvancedSearch
 };

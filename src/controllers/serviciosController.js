@@ -1,5 +1,5 @@
-const Servicio = require('../models/Servicio');
-const { createError } = require('../middlewares/errorHandler');
+import Servicio from '../models/Servicio.js';
+import { createError } from '../middlewares/errorHandler.js';
 
 class ServiciosController {
     
@@ -33,7 +33,7 @@ class ServiciosController {
         try {
             const { limit = 5 } = req.query;
             
-            //  que el límite sea un número válido
+            // Verifica que el límite sea un número válido
             const parsedLimit = parseInt(limit);
             if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 20) {
                 throw createError('El límite debe ser un número entre 1 y 20', 400);
@@ -215,4 +215,4 @@ class ServiciosController {
     }
 }
 
-module.exports = ServiciosController;
+export default ServiciosController;

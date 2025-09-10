@@ -1,4 +1,4 @@
-const { query, transaction } = require('../config/database');
+import { query, transaction } from '../config/database.js';
 
 class Servicio {
   constructor(data = {}) {
@@ -111,7 +111,7 @@ class Servicio {
   }
 
   /**
-   * Verificar si existe un servicio con la misma descripción
+   * Verifica si existe un servicio con la misma descripción
    */
   static async existsByDescripcion(descripcion, excludeId = null) {
     try {
@@ -132,7 +132,7 @@ class Servicio {
   }
 
   /**
-   * Crear nuevo servicio
+   * Crea nuevo servicio
    */
   static async create(data) {
     const { descripcion, importe } = data;
@@ -188,7 +188,7 @@ class Servicio {
       }
       
       if (updateFields.length === 0) {
-        return this; // No hay nada que actualizar
+        return this; 
       }
       
       updateFields.push('modificado = NOW()');
@@ -315,7 +315,7 @@ class Servicio {
   }
 
   /**
-   * Validar datos antes de operaciones
+   * Valida datos antes de operaciones
    */
   static validateData(data, isUpdate = false) {
     const errors = [];
@@ -341,4 +341,4 @@ class Servicio {
   }
 }
 
-module.exports = Servicio;
+export default Servicio;

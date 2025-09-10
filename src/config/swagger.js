@@ -1,5 +1,5 @@
-const swaggerJSDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 class SwaggerConfig {
   constructor(app) {
@@ -36,8 +36,8 @@ class SwaggerConfig {
             email: 'grupoa@progiii.com'
           },
           license: {
-            name: 'MIT',
-            url: 'https://opensource.org/licenses/MIT'
+            name: 'ISC',
+            url: 'https://opensource.org/licenses/ISC'
           }
         },
         servers: [
@@ -229,4 +229,4 @@ class SwaggerConfig {
   }
 }
 
-module.exports = SwaggerConfig;
+export default SwaggerConfig;

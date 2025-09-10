@@ -1,4 +1,4 @@
-const { testConnection } = require('./database');
+import { testConnection } from './database.js';
 
 // Función para inicializar la aplicación
 const initializeApp = async () => {
@@ -17,4 +17,4 @@ const initializeApp = async () => {
   }
 };
 
-module.exports = { initializeApp };
+export { initializeApp };

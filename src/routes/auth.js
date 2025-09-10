@@ -1,10 +1,10 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const AuthController = require('../controllers/authController');
-const { verifyToken } = require('../middlewares/auth');
-const { handleValidationErrors } = require('../middlewares/errorHandler');
-const { validateLogin } = require('../middlewares/validation');
+import AuthController from '../controllers/authController.js';
+import { verifyToken } from '../middlewares/auth.js';
+import { handleValidationErrors } from '../middlewares/errorHandler.js';
+import { validateLogin } from '../middlewares/validation.js';
 
 // POST /api/auth/login - Iniciar sesión
 router.post('/login',
@@ -25,4 +25,4 @@ router.post('/refresh',
   AuthController.refreshToken
 );
 
-module.exports = router;
+export default router;

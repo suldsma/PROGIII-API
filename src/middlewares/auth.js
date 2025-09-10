@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
-const { query } = require('../config/database');
-const { createError } = require('./errorHandler');
+import jwt from 'jsonwebtoken';
+import { query } from '../config/database.js';
+import { createError } from './errorHandler.js';
 
 // Middleware para verificar JWT token
 const verifyToken = async (req, res, next) => {
@@ -15,7 +15,7 @@ const verifyToken = async (req, res, next) => {
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Verificar que el usuario aún existe y está activo
+    // Verifica que el usuario aún existe y está activo
     const usuarios = await query(
       'SELECT usuario_id, nombre, apellido, tipo_usuario FROM usuarios WHERE usuario_id = ? AND activo = 1',
       [decoded.userId]
@@ -60,7 +60,7 @@ const ROLES = {
   CLIENTE: 3
 };
 
-module.exports = {
+export {
   verifyToken,
   requireRole,
   ROLES
