@@ -9,7 +9,8 @@ import {
   validateServicioUpdate,
   validateServicioId,
   validatePagination,
-  validateStatsQuery
+  validateStatsQuery,
+  validatePartialUpdate
 } from '../middlewares/validation.js';
 
 // Middleware de autenticación para todas las rutas de servicios
@@ -322,7 +323,7 @@ router.put('/:id',
  */
 router.patch('/:id',
   requireRole([ROLES.ADMINISTRADOR, ROLES.EMPLEADO]),
-  validateServicioId,
+  validatePartialUpdate,
   handleValidationErrors,
   ServiciosController.partialUpdate
 );

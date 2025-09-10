@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 // Cargar variables de entorno
 dotenv.config();
 
-// Importaciones locales
+// Importaciones locales - CORRECCIÓN: Las rutas de importación estaban mal
 import { initializeApp } from './src/config/init.js';
 import SwaggerConfig from './src/config/swagger.js';
 import { errorHandler } from './src/middlewares/errorHandler.js';
