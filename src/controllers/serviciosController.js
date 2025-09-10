@@ -96,7 +96,7 @@ class ServiciosController {
         }
     }
 
-    // Método update
+    // Método update (PUT - actualización completa)
     static async update(req, res, next) {
         try {
             const { id } = req.params;
@@ -182,7 +182,7 @@ class ServiciosController {
         }
     }
 
-    // Método partialUpdate
+    // Método partialUpdate (PATCH - actualización parcial)
     static async partialUpdate(req, res, next) {
         try {
             const { id } = req.params;
@@ -194,9 +194,19 @@ class ServiciosController {
             }
 
             const updateData = {};
-            if (descripcion !== undefined) updateData.descripcion = descripcion.trim();
-            if (importe !== undefined) updateData.importe = parseFloat(importe);
-            if (activo !== undefined) updateData.activo = activo;
+            
+            // Solo incluye los campos que están presentes en el body
+            if (descripcion !== undefined) {
+                updateData.descripcion = descripcion.trim();
+            }
+            
+            if (importe !== undefined) {
+                updateData.importe = parseFloat(importe);
+            }
+            
+            if (activo !== undefined) {
+                updateData.activo = activo;
+            }
 
             const servicioActualizado = await servicio.update(updateData);
 

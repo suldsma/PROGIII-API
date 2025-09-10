@@ -163,7 +163,7 @@ class Servicio {
    * Actualiza servicio
    */
   async update(data) {
-    const { descripcion, importe } = data;
+    const { descripcion, importe, activo } = data;
     const updateFields = [];
     const params = [];
     
@@ -185,6 +185,11 @@ class Servicio {
       if (importe !== undefined && importe !== null) {
         updateFields.push('importe = ?');
         params.push(parseFloat(importe));
+      }
+      
+      if (activo !== undefined && activo !== null) {
+        updateFields.push('activo = ?');
+        params.push(Boolean(activo));
       }
       
       if (updateFields.length === 0) {

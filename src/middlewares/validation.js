@@ -100,7 +100,7 @@ const validatePagination = [
     .toBoolean()
 ];
 
-// NUEVA VALIDACIÓN AGREGADA - Para estadísticas
+// Validación para estadísticas
 const validateStatsQuery = [
   query('limit')
     .optional()
@@ -129,12 +129,22 @@ const validateLogin = [
     .withMessage('La contraseña no puede exceder 50 caracteres')
 ];
 
-// Validación para actualización parcial de servicio
+// Validación para actualización parcial de servicio (PATCH)
 const validatePartialUpdate = [
   param('id')
     .isInt({ min: 1 })
     .withMessage('El ID debe ser un número entero positivo')
     .toInt(),
+  
+  // Al menos uno de los campos debe estar presente
+  body()
+    .custom((value) => {
+      const { descripcion, importe, activo } = value;
+      if (descripcion === undefined && importe === undefined && activo === undefined) {
+        throw new Error('Al menos un campo (descripcion, importe, activo) debe estar presente para la actualización');
+      }
+      return true;
+    }),
   
   body('descripcion')
     .optional()
