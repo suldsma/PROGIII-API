@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 // Cargar variables de entorno
 dotenv.config();
 
-// Importaciones locales - CORRECCIÓN: Las rutas de importación estaban mal
+// Importaciones locales
 import { initializeApp } from './src/config/init.js';
 import SwaggerConfig from './src/config/swagger.js';
 import { errorHandler } from './src/middlewares/errorHandler.js';
@@ -66,8 +66,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Manejo de rutas no encontradas 
-app.use('*', (req, res) => {
+// Manejo de rutas no encontradas (corregido)
+app.use((req, res) => {
   res.status(404).json({
     status: 'error',
     message: `Endpoint ${req.method} ${req.originalUrl} no encontrado`,

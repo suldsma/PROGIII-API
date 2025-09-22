@@ -1,10 +1,12 @@
 import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Configuración de la base de datos
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
+  user: process.env.DB_USER || 'api_app',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'reservas',
   waitForConnections: true,
