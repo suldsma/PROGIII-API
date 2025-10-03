@@ -13,13 +13,54 @@ npm run dev
 npm start
 ```
 ---
+## ✨ Características
 
+### Primera Entrega - BREAD Completo de Servicios
+
+- ✅ **Browse** - Listar servicios con paginación y búsqueda
+- ✅ **Read** - Obtener servicio por ID
+- ✅ **Edit** - Actualizar servicio (PUT y PATCH)
+- ✅ **Add** - Crear nuevo servicio
+- ✅ **Delete** - Eliminación lógica (soft delete)
+- ✅ **Restore** - Restauración de servicios eliminados
+
+### Funcionalidades Técnicas
+
+- 🔐 Autenticación con JWT
+- 🛡️ Autorización por roles (Administrador, Empleado, Cliente)
+- ✅ Validación de datos con express-validator
+- 📚 Documentación completa con Swagger
+- 🔄 Soft delete en todas las entidades
+- 📊 Endpoints de estadísticas
+- 🎯 Manejo robusto de errores
+- 🔍 Búsqueda y filtrado avanzado
+- 📄 Paginación en listados
+
+---
 
 ##  Documentación API
 
 Una vez que la aplicación esté corriendo, visita:
 - **Swagger UI**: http://localhost:3000/api-docs
 - **Health Check**: http://localhost:3000/api/health
+---
+
+## 🔐 Usuarios de Prueba
+
+Las contraseñas corresponden a la parte antes del `@` en el email:
+
+### Administradores (tipo_usuario = 1)
+- **Email:** oscram@correo.com | **Contraseña:** oscram
+- **Email:** clajua@correo.com | **Contraseña:** clajua
+
+### Empleados (tipo_usuario = 2)
+- **Email:** wilcor@correo.com | **Contraseña:** wilcor
+- **Email:** anaflo@correo.com | **Contraseña:** anaflo
+
+### Clientes (tipo_usuario = 3)
+- **Email:** alblop@correo.com | **Contraseña:** alblop
+- **Email:** pamgom@correo.com | **Contraseña:** pamgom
+- **Email:** estcir@correo.com | **Contraseña:** estcir
 ---
 
 
@@ -32,7 +73,7 @@ Una vez que la aplicación esté corriendo, visita:
 
  -Rita María Victoria Lobos
 
- -Susana Ledesma
+ -Susana Ester Ledesma
  
 ---
 
