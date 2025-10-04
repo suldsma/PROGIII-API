@@ -1,4 +1,80 @@
-import { body, param, query } from 'express-validator';
+import { body, param, query, validationResult } from 'express-validator';
+import { createError } from './errorHandler.js';
+
+const validate = (validations) => {
+  return async (req, res, next) => {
+    await Promise.all(validations.map(validation => validation.run(req,)));
+    const errors = validationResult(req);
+    if (errors.isEmpty()){
+      return next();
+    }
+
+    const extractedErrors = errors.array().map(err => ({
+      param: err.param,
+      message: err.msg,
+      value: err.value,
+    }));
+
+    const validationError = createError('Error de validación de datos.', 400);
+    validationError.errors = extractedErrors;
+    next(validationError);
+  };
+};
+
+const validateReservaCreate = [
+  body('salon_id')
+    .exists().withMessage('El ID de salón es obligatorio.')
+    .isInt({ min: 1}).withMessage('El ID de salón debe ser un número entero positivo.'),
+  
+  body('fecha')
+    .exists().withMessage('La fecha es obligatoria.')
+    .isISO8601().withMessage('Formato de fecha YYYY-MM-DD inválido.')
+    .toDate()
+    .custom((value) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const inputDate = new Date(value);
+      if (inputDate < today) {
+        throw new Error('La fecha debe ser hoy o una futura.');
+      }
+      return true;
+  }),
+
+  body('hora_inicio')
+    .exists().withMessage('La hora de inicio es obligatoria.')
+    .matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('Formato de hora HH:MM inválido.'),
+
+  body('hora_fin')
+    .exists().withMessage('La hora de fin es obligatoria.')
+    .matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('Formato de hora HH:MM inválido.')
+    .custom((horaFin, { req }) => {
+      if (req.body.hora_inicio && horaFin <= req.body.hora_inicio){
+        throw new Error('La hora de fin debe ser posterior a la hora de inicio.'); 
+      }
+      return true;
+  }),
+
+  body('servicios_ids')
+    .optional()
+    .isArray().withMessage('Los servicios deben ser un array de IDs.'),
+
+  body('cliente_id')
+    .optional()
+    .isInt({ min: 1}).withMessage('ID de cliente inválido.')
+    .custom((value, { req }) => {
+      if (req.user && req.user.rol_id !== 3 && ! value){
+        throw new Error('El ID de cliente es obligatorio para crear una reserva como Admin/Empleado.'); 
+      }
+      return true;
+    })
+];
+
+const validateReservaId = [
+  param('id')
+  .isInt({ min: 1})
+  .withMessage('El ID de reserva debe ser un número entero positivo')
+  .toInt()
+]
 
 // Validaciones para servicios
 const validateServicioCreate = [
@@ -237,6 +313,9 @@ const validateAdvancedSearch = [
 ];
 
 export {
+  validate,
+  validateReservaCreate,
+  validateReservaId,
   validateServicioCreate,
   validateServicioUpdate,
   validateServicioId,

@@ -13,7 +13,7 @@ import SwaggerConfig from './src/config/swagger.js';
 import { errorHandler } from './src/middlewares/errorHandler.js';
 import authRoutes from './src/routes/auth.js';
 import serviciosRoutes from './src/routes/servicios.js';
-
+import reservasRoutes from './src/routes/reservas.js';
 const app = express();
 
 // Configuración de middlewares de seguridad y utilidad
@@ -43,7 +43,9 @@ swagger.init();
 
 // Rutas de la API
 app.use('/api/auth', authRoutes);
+app.use('/api/reservas', reservasRoutes);
 app.use('/api/servicios', serviciosRoutes);
+
 
 // Ruta de health check
 app.get('/api/health', (req, res) => {
@@ -67,7 +69,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Manejo de rutas no encontradas 
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     status: 'error',
     message: `Endpoint ${req.method} ${req.originalUrl} no encontrado`,
@@ -76,6 +78,9 @@ app.use('*', (req, res) => {
         'POST /api/auth/login - Iniciar sesión',
         'GET /api/auth/me - Perfil del usuario',
         'POST /api/auth/refresh - Renovar token'
+      ],
+      reservas: [
+        'POST/api/reservas - Crear nueva reserva',
       ],
       servicios: [
         'GET /api/servicios - Listar servicios (Browse)',
