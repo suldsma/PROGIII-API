@@ -4,10 +4,10 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 
-// Cargar variables de entorno
+// Carga de variables de entorno
 dotenv.config();
 
-// Importaciones locales - CORRECCIÓN: Las rutas de importación estaban mal
+// Importaciones locales
 import { initializeApp } from './src/config/init.js';
 import SwaggerConfig from './src/config/swagger.js';
 import { errorHandler } from './src/middlewares/errorHandler.js';
@@ -16,7 +16,8 @@ import serviciosRoutes from './src/routes/servicios.js';
 
 const app = express();
 
-// Configuración de middlewares de seguridad y utilidad
+// --- Configuración de middlewares de seguridad y utilidad ---
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -37,15 +38,18 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Configuración de Swagger usando clase
+// --- Configuración de Swagger ---
+
 const swagger = new SwaggerConfig(app);
 swagger.init();
 
-// Rutas de la API
+// --- Rutas de la API ---
+
 app.use('/api/auth', authRoutes);
 app.use('/api/servicios', serviciosRoutes);
 
-// Ruta de health check
+// --- Ruta de health check ---
+
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
@@ -66,8 +70,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Manejo de rutas no encontradas 
-app.use('*', (req, res) => {
+// --- Manejo de rutas no encontradas (Error 404) ---
+app.use((req, res) => {
   res.status(404).json({
     status: 'error',
     message: `Endpoint ${req.method} ${req.originalUrl} no encontrado`,
@@ -97,10 +101,12 @@ app.use('*', (req, res) => {
   });
 });
 
-// Middleware de manejo de errores 
+// --- Middleware de manejo de errores ---
+
 app.use(errorHandler);
 
-// Función para iniciar el servidor
+// --- Función para iniciar el servidor ---
+
 const startServer = async () => {
   try {
     await initializeApp();
