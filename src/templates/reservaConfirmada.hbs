@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{titulo}}</title>
+    <style>
+        /* Estilos en línea para compatibilidad con clientes de correo */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { width: 90%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        .header { background-color: #007bff; color: white; padding: 15px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { padding: 20px 0; line-height: 1.6; }
+        .detail-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .detail-table th, .detail-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .detail-table th { background-color: #f2f2f2; width: 35%; }
+        .footer { text-align: center; margin-top: 30px; font-size: 0.85em; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
+        .service-item { margin-top: 5px; padding: 5px 0; border-bottom: 1px dashed #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{titulo}}</h1>
+        </div>
+        <div class="content">
+            <p>Estimado/a <strong>{{usuarioNombre}}</strong>,</p>
+            
+            <p>{{mensaje}}</p>
+            
+            <h2>Resumen de la Reserva</h2>
+            <table class="detail-table">
+                <tr>
+                    <th>ID de Reserva:</th>
+                    <td>#{{reservaId}}</td>
+                </tr>
+                <tr>
+                    <th>Fecha del Evento:</th>
+                    <td>{{formatDate fechaReserva "DD/MM/YYYY"}}</td>
+                </tr>
+                <tr>
+                    <th>Horario:</th>
+                    <td>{{turno.hora_desde}} - {{turno.hora_hasta}}</td>
+                </tr>
+                <tr>
+                    <th>Salón:</th>
+                    <td>{{salon.nombre}}</td>
+                </tr>
+                <tr>
+                    <th>Temática:</th>
+                    <td>{{tematica}}</td>
+                </tr>
+            </table>
+
+            <h2>Servicios Adicionales Contratados</h2>
+            {{#if servicios.length}}
+                {{#each servicios}}
+                    <div class="service-item">
+                        <span style="font-weight: bold;">{{descripcion}}</span> - ${{importe}}
+                    </div>
+                {{/each}}
+            {{else}}
+                <p>No se contrataron servicios adicionales.</p>
+            {{/if}}
+
+            <h2 style="text-align: right; margin-top: 30px; color: #007bff;">
+                Importe Total: ${{importeTotal}}
+            </h2>
+        </div>
+        <div class="footer">
+            <p>Este es un mensaje automático. Por favor, no responda a este correo.</p>
+        </div>
+    </div>
+</body>
+</html>

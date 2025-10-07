@@ -1,25 +1,51 @@
-import Servicio from '../models/Servicio.js';
+// src/controllers/serviciosController.js
+
+import Servicio from '../models/Servicio.js'; 
 import { createError } from '../middlewares/errorHandler.js';
+// Asegúrate de que este import apunte al archivo donde definiste ROLES (ej: auth.js)
+import { ROLES } from '../middlewares/auth.js'; 
 
 class ServiciosController {
     
-    // Método getAll
+    // [GET] /api/servicios/stats/most-used
+    // El middleware (validation.js) ya valida y convierte 'limit' a número.
+    static async getMostUsed(req, res, next) {
+        try {
+            // El valor ya es un número gracias a 'toInt()' en el middleware
+            const limit = parseInt(req.query.limit) || 5;
+
+            const serviciosMasUsados = await Servicio.getMostUsed(limit);
+
+            res.status(200).json({
+                status: 'success',
+                message: `Top ${limit} servicios más utilizados obtenidos exitosamente.`,
+                data: serviciosMasUsados
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+    
+    // [GET] /api/servicios (Browse)
     static async getAll(req, res, next) {
         try {
-            const { page = 1, limit = 10, search = '', includeInactive = false } = req.query;
-            const canSeeInactive = req.user.tipo === 1 && includeInactive === 'true';
+            // Lógica de permisos para incluir inactivos: 
+            // Solo si el usuario NO es CLIENTE Y se solicitó explícitamente includeInactive=true
+            const isAdminOrEmployee = req.user.tipo_usuario !== ROLES.CLIENTE;
+            const includeInactive = isAdminOrEmployee && (req.query.includeInactive === 'true');
             
             const options = {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                search,
-                includeInactive: canSeeInactive
+                page: parseInt(req.query.page) || 1,
+                limit: parseInt(req.query.limit) || 10,
+                search: req.query.search || '',
+                includeInactive: includeInactive 
             };
             
             const result = await Servicio.findAll(options);
             
             res.status(200).json({
                 status: 'success',
+                message: 'Lista de servicios obtenida exitosamente.',
                 data: result.servicios,
                 pagination: result.pagination
             });
@@ -28,199 +54,138 @@ class ServiciosController {
         }
     }
 
-    // Método getMostUsed 
-    static async getMostUsed(req, res, next) {
-        try {
-            const { limit = 5 } = req.query;
-            
-            // Verifica que el límite sea un número válido
-            const parsedLimit = parseInt(limit);
-            if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 20) {
-                throw createError('El límite debe ser un número entre 1 y 20', 400);
-            }
-            
-            const serviciosMasUsados = await Servicio.getMostUsed(parsedLimit);
-            
-            res.status(200).json({
-                status: 'success',
-                message: 'Servicios más utilizados obtenidos exitosamente',
-                data: serviciosMasUsados
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    // Método getById
+    // [GET] /api/servicios/:id (Read)
     static async getById(req, res, next) {
         try {
-            const { id } = req.params;
-            const servicio = req.user.tipo === 1 
-                ? await Servicio.findById(id)
-                : await Servicio.findActiveById(id);
+            const id = parseInt(req.params.id);
+            let servicio;
+
+            // CLIENTE (ROLES.CLIENTE) solo puede ver servicios activos
+            if (req.user.tipo_usuario === ROLES.CLIENTE) {
+                servicio = await Servicio.findActiveById(id);
+            } else {
+                // ADMIN/EMPLEADO pueden ver activos e inactivos
+                servicio = await Servicio.findById(id);
+            }
             
             if (!servicio) {
-                throw createError('Servicio no encontrado', 404);
+                // Not found puede significar que no existe o que está inactivo y el usuario no es Admin/Empleado
+                return next(createError('Servicio no encontrado.', 404));
             }
             
             res.status(200).json({
                 status: 'success',
-                data: servicio
+                message: 'Servicio obtenido exitosamente.',
+                data: servicio.toJSON() // Uso consistente de .toJSON()
             });
         } catch (error) {
             next(error);
         }
     }
 
-    // Método create
+    // [POST] /api/servicios (Add)
     static async create(req, res, next) {
         try {
+            // El middleware ya validó y limpió la data
             const { descripcion, importe } = req.body;
             
             const nuevoServicio = await Servicio.create({
-                descripcion: descripcion.trim(),
-                importe: parseFloat(importe)
+                descripcion,
+                importe
             });
             
             res.status(201).json({
                 status: 'success',
-                message: 'Servicio creado exitosamente',
-                data: nuevoServicio
+                message: 'Servicio creado exitosamente.',
+                data: nuevoServicio.toJSON() // Uso consistente de .toJSON()
             });
         } catch (error) {
-            if (error.message.includes('Ya existe un servicio')) {
-                next(createError(error.message, 409));
-            } else {
-                next(error);
-            }
+            // El error es propagado. El Modelo debe lanzar createError(..., 409) para conflictos.
+            next(error); 
         }
     }
 
-    // Método update (PUT - actualización completa)
+    // [PUT] y [PATCH] /api/servicios/:id
+    // Ambos métodos usan la misma lógica de actualización en el Controller, 
+    // confiando en que el middleware (validation.js) filtró los datos necesarios.
     static async update(req, res, next) {
         try {
-            const { id } = req.params;
-            const { descripcion, importe } = req.body;
+            const id = parseInt(req.params.id);
+            const data = req.body;
             
             const servicio = await Servicio.findById(id);
             if (!servicio) {
-                throw createError('Servicio no encontrado', 404);
+                return next(createError('Servicio no encontrado.', 404));
             }
             
-            const updateData = {};
-            if (descripcion !== undefined) updateData.descripcion = descripcion.trim();
-            if (importe !== undefined) updateData.importe = parseFloat(importe);
-            
-            const servicioActualizado = await servicio.update(updateData);
+            const servicioActualizado = await servicio.update(data);
             
             res.status(200).json({
                 status: 'success',
-                message: 'Servicio actualizado exitosamente',
-                data: servicioActualizado
+                message: 'Servicio actualizado exitosamente.',
+                data: servicioActualizado.toJSON() // Uso consistente de .toJSON()
             });
         } catch (error) {
-            if (error.message.includes('Ya existe un servicio')) {
-                next(createError(error.message, 409));
-            } else {
-                next(error);
-            }
+            // El error es propagado. El Modelo debe lanzar createError(..., 409) para conflictos.
+            next(error);
         }
     }
 
-    // Método delete
+    // [PATCH] /api/servicios/:id (Actualización Parcial)
+    static async partialUpdate(req, res, next) {
+        // La lógica es idéntica a 'update', ya que el modelo maneja qué campos se actualizan.
+        return ServiciosController.update(req, res, next);
+    }
+    
+    // [DELETE] /api/servicios/:id (Soft Delete)
     static async delete(req, res, next) {
         try {
-            const { id } = req.params;
+            const id = parseInt(req.params.id);
             
             const servicio = await Servicio.findById(id);
             if (!servicio) {
-                throw createError('Servicio no encontrado', 404);
+                return next(createError('Servicio no encontrado.', 404));
             }
             
             if (!servicio.activo) {
-                throw createError('El servicio ya está eliminado', 400);
+                return next(createError('El servicio ya está inactivo.', 400));
             }
             
             await servicio.softDelete();
             
             res.status(200).json({
                 status: 'success',
-                message: 'Servicio eliminado exitosamente'
+                message: 'Servicio eliminado (soft delete) exitosamente.'
             });
         } catch (error) {
-            if (error.message.includes('está siendo usado')) {
-                next(createError(error.message, 400));
-            } else {
-                next(error);
-            }
+            // El error es propagado. El Modelo debe lanzar createError(..., 400) si tiene reservas activas.
+            next(error); 
         }
     }
     
-    // Método restore
+    // [PATCH] /api/servicios/:id/restore
     static async restore(req, res, next) {
         try {
-            const { id } = req.params;
+            const id = parseInt(req.params.id);
             
             const servicio = await Servicio.findById(id);
             if (!servicio) {
-                throw createError('Servicio no encontrado', 404);
+                return next(createError('Servicio no encontrado.', 404));
             }
             
             if (servicio.activo) {
-                throw createError('El servicio ya está activo', 400);
+                return next(createError('El servicio ya está activo.', 400));
             }
             
             const servicioRestaurado = await servicio.restore();
             
             res.status(200).json({
                 status: 'success',
-                message: 'Servicio restaurado exitosamente',
-                data: servicioRestaurado
+                message: 'Servicio restaurado exitosamente.',
+                data: servicioRestaurado.toJSON() // Uso consistente de .toJSON()
             });
         } catch (error) {
             next(error);
-        }
-    }
-
-    // Método partialUpdate (PATCH - actualización parcial)
-    static async partialUpdate(req, res, next) {
-        try {
-            const { id } = req.params;
-            const { descripcion, importe, activo } = req.body;
-            
-            const servicio = await Servicio.findById(id);
-            if (!servicio) {
-                throw createError('Servicio no encontrado', 404);
-            }
-
-            const updateData = {};
-            
-            // Solo incluye los campos que están presentes en el body
-            if (descripcion !== undefined) {
-                updateData.descripcion = descripcion.trim();
-            }
-            
-            if (importe !== undefined) {
-                updateData.importe = parseFloat(importe);
-            }
-            
-            if (activo !== undefined) {
-                updateData.activo = activo;
-            }
-
-            const servicioActualizado = await servicio.update(updateData);
-
-            res.status(200).json({
-                status: 'success',
-                message: 'Servicio actualizado parcialmente exitosamente',
-                data: servicioActualizado
-            });
-        } catch (error) {
-            if (error.message.includes('Ya existe un servicio')) {
-                next(createError(error.message, 409));
-            } else {
-                next(error);
-            }
         }
     }
 }
