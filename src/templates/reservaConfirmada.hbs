@@ -54,7 +54,7 @@
             {{#if servicios.length}}
                 {{#each servicios}}
                     <div class="service-item">
-                        <span style="font-weight: bold;">{{descripcion}}</span> - ${{importe}}
+                        <span style="font-weight: bold;">{{descripcion}}</span> - ${{importe.toFixed(2)}}
                     </div>
                 {{/each}}
             {{else}}
@@ -62,7 +62,7 @@
             {{/if}}
 
             <h2 style="text-align: right; margin-top: 30px; color: #007bff;">
-                Importe Total: ${{importeTotal}}
+                Importe Total: ${{importeTotal.toFixed(2)}}
             </h2>
         </div>
         <div class="footer">

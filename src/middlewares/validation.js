@@ -191,14 +191,6 @@ const validateId = [
     .toInt()
 ];
 
-const validateOptionalBoolean = (field) => [
-  query(field)
-    .optional()
-    .isBoolean()
-    .withMessage(`${field} debe ser true o false`)
-    .toBoolean()
-];
-
 // Validación para campos de búsqueda avanzada
 const validateAdvancedSearch = [
   query('sortBy')
@@ -244,7 +236,6 @@ export {
   validateStatsQuery,
   validateLogin,
   validateId,
-  validateOptionalBoolean,
   validatePartialUpdate,
   validateAdvancedSearch
 };

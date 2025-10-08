@@ -64,7 +64,6 @@ router.use(verifyToken);
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-// IMPORTANTE: Rutas específicas PRIMERO antes que las parametrizadas
 router.get('/stats/most-used',
   validateStatsQuery,
   handleValidationErrors,

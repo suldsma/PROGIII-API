@@ -17,7 +17,6 @@ import serviciosRoutes from './src/routes/servicios.js';
 const app = express();
 
 // --- Configuración de middlewares de seguridad y utilidad ---
-
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -39,17 +38,14 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // --- Configuración de Swagger ---
-
 const swagger = new SwaggerConfig(app);
 swagger.init();
 
 // --- Rutas de la API ---
-
 app.use('/api/auth', authRoutes);
 app.use('/api/servicios', serviciosRoutes);
 
 // --- Ruta de health check ---
-
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
@@ -102,11 +98,9 @@ app.use((req, res) => {
 });
 
 // --- Middleware de manejo de errores ---
-
 app.use(errorHandler);
 
 // --- Función para iniciar el servidor ---
-
 const startServer = async () => {
   try {
     await initializeApp();

@@ -4,20 +4,21 @@ import handlebars from 'handlebars';
 import fs from 'fs';
 import path from 'path';
 
-// Directorio donde residen todas las plantillas .hbs
 // Usamos path.resolve() para asegurar la ruta absoluta
 const TEMPLATE_DIR = path.resolve('src', 'templates');
 
 /**
  * Compila una plantilla Handlebars dada el nombre del archivo y los datos.
- * @param {string} templateName Nombre del archivo de la plantilla (ej: 'reservaConfirmada')
+ * @param {string} templateName Nombre del archivo de la plantilla 
  * @param {object} data Datos a inyectar en la plantilla
  * @returns {string} El HTML compilado
+ * @throws 
  */
 export const compileTemplate = (templateName, data) => {
     try {
         const templatePath = path.join(TEMPLATE_DIR, `${templateName}.hbs`);
         
+        // Verificamos si la plantilla existe
         if (!fs.existsSync(templatePath)) {
             throw new Error(`Plantilla no encontrada: ${templateName}.hbs. Asegúrese de crear el archivo en ${TEMPLATE_DIR}`);
         }
@@ -49,6 +50,7 @@ handlebars.registerHelper('formatDate', (date, format = 'DD/MM/YYYY HH:mm') => {
     const hour = String(d.getHours()).padStart(2, '0');
     const minute = String(d.getMinutes()).padStart(2, '0');
 
+    // Formateo de la fecha según el formato especificado
     if (format.includes('DD/MM/YYYY') && format.includes('HH:mm')) {
         return `${day}/${month}/${year} ${hour}:${minute}`;
     }

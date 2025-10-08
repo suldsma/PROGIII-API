@@ -6,15 +6,17 @@ import { createError } from './errorHandler.js';
 const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
+    // Verifica si el encabezado de autorización está presente y tiene el formato correcto
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw createError('Token de acceso requerido', 401);
+      return next(createError('Token de acceso requerido', 401));
     }
 
     const token = authHeader.substring(7); // Remover 'Bearer '
-    
+
+    // Verifica y decodifica el token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Verifica que el usuario aún existe y está activo
     const usuarios = await query(
       'SELECT usuario_id, nombre, apellido, tipo_usuario FROM usuarios WHERE usuario_id = ? AND activo = 1',
@@ -22,9 +24,10 @@ const verifyToken = async (req, res, next) => {
     );
 
     if (usuarios.length === 0) {
-      throw createError('Usuario no encontrado o inactivo', 401);
+      return next(createError('Usuario no encontrado o inactivo', 401));
     }
 
+    // Asigna los datos del usuario a la solicitud
     req.user = {
       id: usuarios[0].usuario_id,
       nombre: usuarios[0].nombre,
@@ -34,7 +37,14 @@ const verifyToken = async (req, res, next) => {
 
     next();
   } catch (error) {
-    next(error);
+    // Captura errores de verificación de token
+    if (error instanceof jwt.JsonWebTokenError) {
+      return next(createError('Token inválido', 401));
+    }
+    if (error instanceof jwt.TokenExpiredError) {
+      return next(createError('Token expirado', 401));
+    }
+    next(createError('Error al verificar el token', 500));
   }
 };
 

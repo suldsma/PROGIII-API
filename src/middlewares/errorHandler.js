@@ -1,8 +1,5 @@
 import { validationResult } from 'express-validator';
 
-/**
- * Middleware para manejar errores de validación de express-validator
- */
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   
@@ -54,59 +51,53 @@ const errorHandler = (error, req, res, next) => {
 
   // Errores de base de datos MySQL
   if (error.code) {
-    switch (error.code) {
-      case 'ER_DUP_ENTRY':
-        return res.status(409).json({
-          status: 'error',
-          message: 'Ya existe un registro con estos datos',
-          detail: 'Registro duplicado'
-        });
-      
-      case 'ER_NO_REFERENCED_ROW_2':
-        return res.status(400).json({
-          status: 'error',
-          message: 'Referencia inválida a otro registro',
-          detail: 'La referencia especificada no existe'
-        });
-      
-      case 'ER_BAD_NULL_ERROR':
-        return res.status(400).json({
-          status: 'error',
-          message: 'Campo requerido faltante',
-          detail: 'Uno o más campos obligatorios no fueron proporcionados'
-        });
-      
-      case 'ER_DATA_TOO_LONG':
-        return res.status(400).json({
-          status: 'error',
-          message: 'Datos demasiado largos para el campo',
-          detail: 'Uno o más campos exceden la longitud máxima permitida'
-        });
-      
-      case 'ER_TRUNCATED_WRONG_VALUE':
-        return res.status(400).json({
-          status: 'error',
-          message: 'Formato de dato incorrecto',
-          detail: 'Uno o más campos tienen un formato inválido'
-        });
-      
-      case 'ECONNREFUSED':
-        return res.status(503).json({
-          status: 'error',
-          message: 'Error de conexión con la base de datos',
-          detail: 'Servicio temporalmente no disponible'
-        });
-      
-      case 'ER_ACCESS_DENIED_ERROR':
-        return res.status(503).json({
-          status: 'error',
-          message: 'Error de acceso a la base de datos',
-          detail: 'Configuración de base de datos incorrecta'
-        });
-      
-      default:
-        console.error('Error de BD no manejado:', error.code, error.message);
-        break;
+    const dbErrorResponses = {
+      'ER_DUP_ENTRY': {
+        status: 409,
+        message: 'Ya existe un registro con estos datos',
+        detail: 'Registro duplicado'
+      },
+      'ER_NO_REFERENCED_ROW_2': {
+        status: 400,
+        message: 'Referencia inválida a otro registro',
+        detail: 'La referencia especificada no existe'
+      },
+      'ER_BAD_NULL_ERROR': {
+        status: 400,
+        message: 'Campo requerido faltante',
+        detail: 'Uno o más campos obligatorios no fueron proporcionados'
+      },
+      'ER_DATA_TOO_LONG': {
+        status: 400,
+        message: 'Datos demasiado largos para el campo',
+        detail: 'Uno o más campos exceden la longitud máxima permitida'
+      },
+      'ER_TRUNCATED_WRONG_VALUE': {
+        status: 400,
+        message: 'Formato de dato incorrecto',
+        detail: 'Uno o más campos tienen un formato inválido'
+      },
+      'ECONNREFUSED': {
+        status: 503,
+        message: 'Error de conexión con la base de datos',
+        detail: 'Servicio temporalmente no disponible'
+      },
+      'ER_ACCESS_DENIED_ERROR': {
+        status: 503,
+        message: 'Error de acceso a la base de datos',
+        detail: 'Configuración de base de datos incorrecta'
+      }
+    };
+
+    const response = dbErrorResponses[error.code];
+    if (response) {
+      return res.status(response.status).json({
+        status: 'error',
+        message: response.message,
+        detail: response.detail
+      });
+    } else {
+      console.error('Error de BD no manejado:', error.code, error.message);
     }
   }
 
@@ -160,14 +151,14 @@ const errorHandler = (error, req, res, next) => {
       message: error.message
     };
 
-    // Agregar detalles adicionales si están disponibles
+    // Agrego detalles adicionales si están disponibles
     if (error.details) response.details = error.details;
     if (error.errors) response.errors = error.errors;
 
     return res.status(error.status).json(response);
   }
 
-  // Error interno del servidor (catch-all)
+  // Error interno del servidor 
   const isDevelopment = process.env.NODE_ENV === 'development';
   
   return res.status(500).json({
@@ -255,7 +246,6 @@ const logCriticalError = (error, context = {}) => {
     stack: error.stack
   });
   console.error('====================');
-  
 };
 
 export {

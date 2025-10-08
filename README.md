@@ -63,6 +63,15 @@ Las contraseñas corresponden a la parte antes del `@` en el email:
 - **Email:** estcir@correo.com | **Contraseña:** estcir
 ---
 
+## 🎯 Implementación Adelantada (Para Entrega Final)
+
+### Sistema de Notificaciones
+Como funcionalidad extra elegida para la entrega final, hemos adelantado la implementación del sistema de notificaciones con templates HTML:
+
+- **NotificationService.js**: Servicio para generar y registrar notificaciones
+- **handlebarsCompiler.js**: Compilador de plantillas Handlebars
+- **reservaConfirmada.hbs**: Template HTML para confirmación de reservas
+---
 
 ##  Grupo A - PROGIII**
 ```

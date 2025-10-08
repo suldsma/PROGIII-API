@@ -14,7 +14,7 @@ const dbConfig = {
  
 };
 
-// Crea pool de conexiones
+// Creo pool de conexiones
 const pool = mysql.createPool(dbConfig);
 
 // Función para probar la conexión
