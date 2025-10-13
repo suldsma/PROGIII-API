@@ -1,4 +1,4 @@
-// src/utils/handlebarsCompiler.js
+// src/utiles/handlebarsCompiler.js
 
 import handlebars from 'handlebars';
 import fs from 'fs';
@@ -59,4 +59,35 @@ handlebars.registerHelper('formatDate', (date, format = 'DD/MM/YYYY HH:mm') => {
     }
 
     return `${day}/${month}/${year} ${hour}:${minute}`;
+});
+
+/**
+ * Helper para formatear moneda
+ * Convierte números a formato de pesos argentinos
+ * @example {{formatCurrency 15000.50}} → $15,000.50
+ */
+handlebars.registerHelper('formatCurrency', (value) => {
+    if (!value && value !== 0) return '$0.00';
+    
+    const num = parseFloat(value);
+    if (isNaN(num)) return '$0.00';
+    
+    // Formatea con separador de miles y 2 decimales
+    return '$' + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+});
+
+/**
+ * Helper para verificar si un array tiene elementos
+ * @example {{#if (hasItems servicios)}}...{{/if}}
+ */
+handlebars.registerHelper('hasItems', (array) => {
+    return Array.isArray(array) && array.length > 0;
+});
+
+/**
+ * Helper para comparaciones
+ * @example {{#if (eq status "activo")}}...{{/if}}
+ */
+handlebars.registerHelper('eq', (a, b) => {
+    return a === b;
 });

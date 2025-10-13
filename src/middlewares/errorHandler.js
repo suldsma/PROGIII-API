@@ -1,259 +1,207 @@
 import { validationResult } from 'express-validator';
 
+/**
+ * Middleware que intercepta y formatea los errores de validación de express-validator.
+ */
 const handleValidationErrors = (req, res, next) => {
-  const errors = validationResult(req);
-  
-  if (!errors.isEmpty()) {
-    const formattedErrors = errors.array().map(error => ({
-      field: error.path || error.param,
-      message: error.msg,
-      value: error.value,
-      location: error.location
-    }));
-    
-    return res.status(400).json({
-      status: 'error',
-      message: 'Errores de validación en los datos enviados',
-      errors: formattedErrors
-    });
-  }
-  
-  next();
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    // Mapeo los errores a un formato de respuesta legible
+    const formattedErrors = errors.array().map(error => ({
+      field: error.path || error.param,
+      message: error.msg,
+      value: error.value,
+      location: error.location
+    }));
+    
+    // Respondo con código 400 Bad Request
+    return res.status(400).json({
+      status: 'error',
+      message: 'Errores de validación en los datos enviados',
+      errors: formattedErrors
+    });
+  }
+  
+  next();
 };
 
 /**
- * Middleware global para manejo de errores
+ * Middleware global para manejo de errores 
  */
 const errorHandler = (error, req, res, next) => {
-  // Log del error para debugging
-  console.error('=== ERROR HANDLER ===');
-  console.error('Timestamp:', new Date().toISOString());
-  console.error('Method:', req.method);
-  console.error('URL:', req.originalUrl);
-  console.error('User:', req.user ? `${req.user.id} (${req.user.tipo})` : 'No autenticado');
-  console.error('Error:', {
-    name: error.name,
-    message: error.message,
-    status: error.status,
-    code: error.code,
-    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-  });
-  console.error('==================');
+  // Logueo el error para depuración 
+  console.error('=== ERROR HANDLER ===');
+  console.error('Timestamp:', new Date().toISOString());
+  console.error('Method:', req.method);
+  console.error('URL:', req.originalUrl);
+  console.error('Error:', {
+    name: error.name,
+    message: error.message,
+    status: error.status,
+    code: error.code,
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+  });
+  console.error('==================');
 
-  // Error de validación personalizado
-  if (error.type === 'validation') {
-    return res.status(400).json({
-      status: 'error',
-      message: 'Datos de entrada inválidos',
-      errors: error.details || []
-    });
-  }
+  // Manejo de errores de validación personalizados 
+  if (error.type === 'validation') {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Datos de entrada inválidos',
+      errors: error.details || []
+    });
+  }
 
-  // Errores de base de datos MySQL
-  if (error.code) {
-    const dbErrorResponses = {
-      'ER_DUP_ENTRY': {
-        status: 409,
-        message: 'Ya existe un registro con estos datos',
-        detail: 'Registro duplicado'
-      },
-      'ER_NO_REFERENCED_ROW_2': {
-        status: 400,
-        message: 'Referencia inválida a otro registro',
-        detail: 'La referencia especificada no existe'
-      },
-      'ER_BAD_NULL_ERROR': {
-        status: 400,
-        message: 'Campo requerido faltante',
-        detail: 'Uno o más campos obligatorios no fueron proporcionados'
-      },
-      'ER_DATA_TOO_LONG': {
-        status: 400,
-        message: 'Datos demasiado largos para el campo',
-        detail: 'Uno o más campos exceden la longitud máxima permitida'
-      },
-      'ER_TRUNCATED_WRONG_VALUE': {
-        status: 400,
-        message: 'Formato de dato incorrecto',
-        detail: 'Uno o más campos tienen un formato inválido'
-      },
-      'ECONNREFUSED': {
-        status: 503,
-        message: 'Error de conexión con la base de datos',
-        detail: 'Servicio temporalmente no disponible'
-      },
-      'ER_ACCESS_DENIED_ERROR': {
-        status: 503,
-        message: 'Error de acceso a la base de datos',
-        detail: 'Configuración de base de datos incorrecta'
-      }
-    };
+  // Manejo de errores comunes de base de datos MySQL por su código
+  if (error.code) {
+    const dbErrorResponses = {
+      'ER_DUP_ENTRY': { status: 409, message: 'Ya existe un registro con estos datos', detail: 'Registro duplicado' },
+      'ER_NO_REFERENCED_ROW_2': { status: 400, message: 'Referencia inválida a otro registro', detail: 'La referencia especificada no existe' },
+      'ER_BAD_NULL_ERROR': { status: 400, message: 'Campo requerido faltante', detail: 'Uno o más campos obligatorios no fueron proporcionados' },
+      'ER_DATA_TOO_LONG': { status: 400, message: 'Datos demasiado largos para el campo' },
+      'ER_TRUNCATED_WRONG_VALUE': { status: 400, message: 'Formato de dato incorrecto' },
+      'ECONNREFUSED': { status: 503, message: 'Error de conexión con la base de datos' },
+      'ER_ACCESS_DENIED_ERROR': { status: 503, message: 'Error de acceso a la base de datos' }
+    };
 
-    const response = dbErrorResponses[error.code];
-    if (response) {
-      return res.status(response.status).json({
-        status: 'error',
-        message: response.message,
-        detail: response.detail
-      });
-    } else {
-      console.error('Error de BD no manejado:', error.code, error.message);
-    }
-  }
+    const response = dbErrorResponses[error.code];
+    if (response) {
+      return res.status(response.status).json({
+        status: 'error',
+        message: response.message,
+        detail: response.detail || 'Error de base de datos'
+      });
+    }
+  }
 
-  // Errores de JWT
-  if (error.name === 'JsonWebTokenError') {
-    return res.status(401).json({
-      status: 'error',
-      message: 'Token de acceso inválido',
-      detail: 'El token proporcionado no es válido'
-    });
-  }
+  // Manejo de errores de JWT (JsonWebTokenError, TokenExpiredError, NotBeforeError)
+  if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError' || error.name === 'NotBeforeError') {
+    let status = 401;
+    let message = 'Token de acceso inválido';
+    if (error.name === 'TokenExpiredError') message = 'Token de acceso expirado';
+    if (error.name === 'NotBeforeError') message = 'Token no válido aún';
 
-  if (error.name === 'TokenExpiredError') {
-    return res.status(401).json({
-      status: 'error',
-      message: 'Token de acceso expirado',
-      detail: 'Debe iniciar sesión nuevamente'
-    });
-  }
+    return res.status(status).json({ status: 'error', message });
+  }
 
-  if (error.name === 'NotBeforeError') {
-    return res.status(401).json({
-      status: 'error',
-      message: 'Token no válido aún',
-      detail: 'El token no es válido en este momento'
-    });
-  }
+  // Manejo de errores de Express Body Parser 
+  if (error.name === 'SyntaxError' && error.message.includes('JSON')) {
+    return res.status(400).json({ status: 'error', message: 'Formato JSON inválido' });
+  }
+  if (error.name === 'PayloadTooLargeError') {
+    return res.status(413).json({ status: 'error', message: 'Datos demasiado grandes' });
+  }
 
-  // Errores de parsing JSON
-  if (error.name === 'SyntaxError' && error.message.includes('JSON')) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'Formato JSON inválido',
-      detail: 'El cuerpo de la petición contiene JSON malformado'
-    });
-  }
+  // Manejo de errores personalizados con status 
+  if (error.status) {
+    const response = { status: 'error', message: error.message };
+    if (error.details) response.details = error.details;
+    return res.status(error.status).json(response);
+  }
 
-  // Error de límite de tamaño de payload
-  if (error.name === 'PayloadTooLargeError') {
-    return res.status(413).json({
-      status: 'error',
-      message: 'Datos demasiado grandes',
-      detail: 'El tamaño de los datos excede el límite permitido'
-    });
-  }
-
-  // Errores personalizados con status
-  if (error.status) {
-    const response = {
-      status: 'error',
-      message: error.message
-    };
-
-    // Agrego detalles adicionales si están disponibles
-    if (error.details) response.details = error.details;
-    if (error.errors) response.errors = error.errors;
-
-    return res.status(error.status).json(response);
-  }
-
-  // Error interno del servidor 
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  
-  return res.status(500).json({
-    status: 'error',
-    message: 'Error interno del servidor',
-    ...(isDevelopment && {
-      detail: error.message,
-      stack: error.stack
-    })
-  });
+  // Respuesta por defecto para Error Interno del Servidor (500)
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  return res.status(500).json({
+    status: 'error',
+    message: 'Error interno del servidor',
+    ...(isDevelopment && { detail: error.message, stack: error.stack }) // Información extra en desarrollo
+  });
 };
 
+//---
+
 /**
- * Middleware para manejar rutas no encontradas (404)
+ * Middleware para manejar rutas no encontradas (404 Not Found)
  */
 const notFoundHandler = (req, res) => {
-  res.status(404).json({
-    status: 'error',
-    message: 'Endpoint no encontrado',
-    detail: `${req.method} ${req.originalUrl} no existe`,
-    availableEndpoints: {
-      auth: [
-        'POST /api/auth/login',
-        'GET /api/auth/me',
-        'POST /api/auth/refresh'
-      ],
-      servicios: [
-        'GET /api/servicios',
-        'POST /api/servicios',
-        'GET /api/servicios/:id',
-        'PUT /api/servicios/:id',
-        'PATCH /api/servicios/:id',
-        'DELETE /api/servicios/:id',
-        'PATCH /api/servicios/:id/restore',
-        'GET /api/servicios/stats/most-used'
-      ],
-      otros: [
-        'GET /api/health',
-        'GET /api-docs'
-      ]
-    }
-  });
+  res.status(404).json({
+    status: 'error',
+    message: 'Endpoint no encontrado',
+    detail: `${req.method} ${req.originalUrl} no existe`,
+    // Se lista una guía de endpoints disponibles para el cliente
+    availableEndpoints: {
+      auth: [
+        'POST /api/auth/login',
+        'GET /api/auth/me',
+        'POST /api/auth/refresh'
+      ],
+      servicios: [
+        'GET /api/servicios',
+        'POST /api/servicios',
+        'GET /api/servicios/:id',
+        'PUT /api/servicios/:id',
+        'PATCH /api/servicios/:id',
+        'DELETE /api/servicios/:id',
+        'PATCH /api/servicios/:id/restore',
+        'GET /api/servicios/stats/most-used'
+      ],
+      otros: [
+        'GET /api/health',
+        'GET /api-docs'
+      ]
+    }
+  });
 };
 
+//---
+
 /**
- * Función helper para crear errores personalizados
+ * Función helper para crear errores HTTP personalizados
+ * @param {string} message - Mensaje de error
+ * @param {number} status - Código de estado HTTP (por defecto 500)
+ * @param {any} details - Detalles adicionales
  */
 const createError = (message, status = 500, details = null) => {
-  const error = new Error(message);
-  error.status = status;
-  if (details) error.details = details;
-  return error;
+  const error = new Error(message);
+  error.status = status;
+  if (details) error.details = details;
+  return error;
 };
 
 /**
- * Función helper para crear errores de validación
+ * Función helper para crear errores de validación personalizados
  */
 const createValidationError = (message, errors = []) => {
-  const error = new Error(message);
-  error.type = 'validation';
-  error.status = 400;
-  error.details = errors;
-  return error;
+  const error = new Error(message);
+  error.type = 'validation'; // Marca el error para el errorHandler
+  error.status = 400;
+  error.details = errors;
+  return error;
 };
 
 /**
- * Middleware para capturar errores asíncronos
+ * Middleware wrapper para manejar promesas en funciones asíncronas de Express
+ * Captura automáticamente errores de async/await y los pasa a next()
  */
 const asyncHandler = (fn) => {
-  return (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
 };
 
 /**
- * Función para log de errores críticos
+ * Función para log de errores críticos (por ejemplo, al fallar el inicio del servidor)
  */
 const logCriticalError = (error, context = {}) => {
-  console.error('=== ERROR CRÍTICO ===');
-  console.error('Timestamp:', new Date().toISOString());
-  console.error('Context:', context);
-  console.error('Error:', {
-    name: error.name,
-    message: error.message,
-    stack: error.stack
-  });
-  console.error('====================');
+  console.error('=== ERROR CRÍTICO ===');
+  console.error('Timestamp:', new Date().toISOString());
+  console.error('Context:', context);
+  console.error('Error:', {
+    name: error.name,
+    message: error.message,
+    stack: error.stack
+  });
+  console.error('====================');
 };
 
 export {
-  errorHandler,
-  handleValidationErrors,
-  notFoundHandler,
-  createError,
-  createValidationError,
-  asyncHandler,
-  logCriticalError
+  errorHandler,
+  handleValidationErrors,
+  notFoundHandler,
+  createError,
+  createValidationError,
+  asyncHandler,
+  logCriticalError
 };

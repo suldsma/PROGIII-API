@@ -1,4 +1,6 @@
-# Node modules
+# ==============================
+#  Node modules y dependencias
+# ==============================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -6,7 +8,9 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
-# Environment variables
+# ==============================
+#  Variables de entorno
+# ==============================
 .env
 .env.local
 .env.development
@@ -15,13 +19,18 @@ yarn.lock
 .env.*.local
 .env.*.development
 
-# Database files
+# ==============================
+#  Archivos de base de datos
+# ==============================
 *.sql
+!reservas.sql   # Se mantiene este archivo específico
 *.sqlite
 *.db
 *.mdb
 
-# Logs
+# ==============================
+#  Archivos de log
+# ==============================
 logs/
 *.log
 npm-debug.log*
@@ -30,7 +39,9 @@ pids/
 *.seed
 *.pid.lock
 
-# Temporary files
+# ==============================
+#  Archivos temporales
+# ==============================
 tmp/
 temp/
 *.tmp
@@ -38,14 +49,18 @@ temp/
 *.err
 *.out
 
-# Build directories
+# ==============================
+#  Directorios de build
+# ==============================
 dist/
 build/
 out/
 coverage/
 .nyc_output/
 
-# IDE specific files
+# ==============================
+#  Archivos específicos de IDEs
+# ==============================
 .vscode/
 .idea/
 *.swp
@@ -57,23 +72,31 @@ coverage/
 *.sublime-project
 *.sublime-workspace
 
-# Backup files
+# ==============================
+#  Archivos de respaldo
+# ==============================
 *.bak
 *.backup
 *~
 
-# Uploads
+# ==============================
+#  Subidas y recursos públicos
+# ==============================
 uploads/
 public/uploads/
 
-# macOS specific files
+# ==============================
+#  Archivos específicos de macOS
+# ==============================
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
 
-# Windows specific files
+# ==============================
+#  Archivos específicos de Windows
+# ==============================
 ehthumbs.db
 Thumbs.db
 desktop.ini

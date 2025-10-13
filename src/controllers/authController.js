@@ -1,7 +1,8 @@
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import { query } from '../config/database.js';
-import { createError } from '../middlewares/errorHandler.js';
+// Importo librerías y módulos necesarios
+import jwt from 'jsonwebtoken'; // Para manejo de JSON Web Tokens
+import crypto from 'crypto'; // Para hashing de contraseñas (MD5)
+import { query } from '../config/database.js'; // Función para ejecutar queries a la DB
+import { createError } from '../middlewares/errorHandler.js'; // Utilidad para crear errores HTTP
 
 /**
  * @swagger
@@ -11,7 +12,6 @@ import { createError } from '../middlewares/errorHandler.js';
  */
 
 class AuthController {
-
   /**
    * @swagger
    * /api/auth/login:
@@ -43,34 +43,7 @@ class AuthController {
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 status:
-   *                   type: string
-   *                   example: success
-   *                 message:
-   *                   type: string
-   *                   example: Login exitoso
-   *                 data:
-   *                   type: object
-   *                   properties:
-   *                     token:
-   *                       type: string
-   *                       description: JWT token
-   *                     user:
-   *                       type: object
-   *                       properties:
-   *                         id:
-   *                           type: integer
-   *                         nombre:
-   *                           type: string
-   *                         apellido:
-   *                           type: string
-   *                         nombre_usuario:
-   *                           type: string
-   *                         tipo_usuario:
-   *                           type: integer
-   *                           description: 1=Admin, 2=Empleado, 3=Cliente
+   *               $ref: '#/components/schemas/LoginResponse'
    *       401:
    *         description: Credenciales inválidas
    *         content:
@@ -82,7 +55,7 @@ class AuthController {
     try {
       const { nombre_usuario, contrasenia } = req.body;
 
-      // Busco usuario por nombre_usuario (email)
+      // Busco el usuario activo por nombre de usuario (email)
       const usuarios = await query(
         `SELECT usuario_id, nombre, apellido, nombre_usuario, contrasenia, tipo_usuario, celular, foto, creado, activo 
          FROM usuarios 
@@ -91,35 +64,37 @@ class AuthController {
       );
 
       if (usuarios.length === 0) {
-        throw createError('Credenciales inválidas', 401);
+        throw createError('Credenciales inválidas', 401); // Usuario no encontrado/activo
       }
 
       const usuario = usuarios[0];
 
-      // Verifico contraseña usando MD5 
+      // Hashing de la contraseña ingresada con MD5
       const contrasenaHash = crypto.createHash('md5').update(contrasenia).digest('hex');
-      
+
+      // Comparo el hash ingresado con el hash de la DB
       if (contrasenaHash !== usuario.contrasenia) {
         throw createError('Credenciales inválidas', 401);
       }
 
-      // Genero JWT token
+      // Defino el payload para el JWT
       const tokenPayload = {
         userId: usuario.usuario_id,
         email: usuario.nombre_usuario,
         tipo: usuario.tipo_usuario
       };
 
+      // Genero el JWT con la clave secreta y tiempo de expiración
       const token = jwt.sign(
         tokenPayload,
         process.env.JWT_SECRET,
-        { 
+        {
           expiresIn: process.env.JWT_EXPIRES_IN || '24h',
           issuer: 'progiii-api'
         }
       );
 
-      // Preparo datos del usuario para la respuesta (sin contraseña)
+      // Filtro los datos del usuario para la respuesta
       const userData = {
         id: usuario.usuario_id,
         nombre: usuario.nombre,
@@ -132,6 +107,7 @@ class AuthController {
         creado: usuario.creado
       };
 
+      // Respondo con el token y los datos del usuario
       res.status(200).json({
         status: 'success',
         message: 'Login exitoso',
@@ -142,7 +118,7 @@ class AuthController {
       });
 
     } catch (error) {
-      next(error);
+      next(error); // Paso el error al middleware de errores
     }
   }
 
@@ -166,24 +142,7 @@ class AuthController {
    *                   type: string
    *                   example: success
    *                 data:
-   *                   type: object
-   *                   properties:
-   *                     id:
-   *                       type: integer
-   *                     nombre:
-   *                       type: string
-   *                     apellido:
-   *                       type: string
-   *                     nombre_usuario:
-   *                       type: string
-   *                     tipo_usuario:
-   *                       type: integer
-   *                     tipo_usuario_texto:
-   *                       type: string
-   *                     celular:
-   *                       type: string
-   *                     foto:
-   *                       type: string
+   *                   $ref: '#/components/schemas/Usuario'
    *       401:
    *         description: Token inválido o expirado
    *         content:
@@ -193,8 +152,9 @@ class AuthController {
    */
   static async getProfile(req, res, next) {
     try {
-      const userId = req.user.id;
+      const userId = req.user.id; // ID de usuario inyectado por el middleware de autenticación (JWT)
 
+      // Busco todos los datos del usuario activo por su ID
       const usuarios = await query(
         `SELECT usuario_id, nombre, apellido, nombre_usuario, tipo_usuario, celular, foto, creado
          FROM usuarios 
@@ -208,6 +168,7 @@ class AuthController {
 
       const usuario = usuarios[0];
 
+      // Estructuro los datos del usuario para la respuesta
       const userData = {
         id: usuario.usuario_id,
         nombre: usuario.nombre,
@@ -244,20 +205,7 @@ class AuthController {
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 status:
-   *                   type: string
-   *                   example: success
-   *                 message:
-   *                   type: string
-   *                   example: Token renovado exitosamente
-   *                 data:
-   *                   type: object
-   *                   properties:
-   *                     token:
-   *                       type: string
-   *                       description: Nuevo JWT token
+   *               $ref: '#/components/schemas/LoginResponse'
    *       401:
    *         description: Token inválido
    *         content:
@@ -267,31 +215,32 @@ class AuthController {
    */
   static async refreshToken(req, res, next) {
     try {
-      const userId = req.user.id;
+      const userId = req.user.id; // Obtengo el ID del payload del token actual
 
-      // Verifico que el usuario aún existe y está activo
+      // Re-verifico que el usuario todavía exista y esté activo en la DB
       const usuarios = await query(
         'SELECT usuario_id, nombre_usuario, tipo_usuario FROM usuarios WHERE usuario_id = ? AND activo = 1',
         [userId]
       );
 
       if (usuarios.length === 0) {
-        throw createError('Usuario no encontrado', 401);
+        throw createError('Usuario no encontrado', 401); // Error si el usuario fue desactivado
       }
 
       const usuario = usuarios[0];
 
-      // Genero nuevo token
+      // Defino el payload para el nuevo token
       const tokenPayload = {
         userId: usuario.usuario_id,
         email: usuario.nombre_usuario,
         tipo: usuario.tipo_usuario
       };
 
+      // Genero el nuevo JWT
       const newToken = jwt.sign(
         tokenPayload,
         process.env.JWT_SECRET,
-        { 
+        {
           expiresIn: process.env.JWT_EXPIRES_IN || '24h',
           issuer: 'progiii-api'
         }
@@ -310,7 +259,7 @@ class AuthController {
     }
   }
 
-  // Método helper para obtener el texto del tipo de usuario
+  // Función auxiliar para mapear el ID de tipo de usuario a su texto
   static getTipoUsuarioTexto(tipo) {
     const tipos = {
       1: 'Administrador',
